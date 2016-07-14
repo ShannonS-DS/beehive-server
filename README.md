@@ -12,7 +12,7 @@ To get the latest version of Docker in Ubuntu use this (simply copy-paste the wh
 ```
 apt-key adv --keyserver hkp://pgp.mit.edu:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D
 export CODENAME=$(lsb_release --codename | grep -o "[a-z]*$" | tr -d '\n')
-echo "deb https://apt.dockerproject.org/repo ubuntu-${CODENAME} main" >> /etc/apt/sources.list.d/docker.list
+echo "deb https://apt.dockerproject.org/repo ubuntu-${CODENAME} main" > /etc/apt/sources.list.d/docker.list
 apt-get update
 apt-get install -y  docker-engine
 ```
@@ -158,3 +158,24 @@ To use systemd unit files for the beehive components, follow these instructions:
 
 
 [systemd/README.md](./systemd/README.md)
+
+## TroubleShooting
+
+### SSL certificate related problems
+
+If a node gets the error below when the node tries to connect to the beehive server, the SSL certificate key that the node is using may possibly be wrong or corrupted. 
+
+```
+# log from node side
+2016-06-28 22:34:29,260 - __main__ - ERROR - line=312 - Could not connect to Beehive server (xxx.xxx.xxx.xxx): Connection to xxx.xxx.xxx.xxx:yyyyy failed: [Errno 1] _ssl.c:510: error:0407006A:rsa routines:RSA_padding_check_PKCS1_type_1:block type is not 01
+```
+
+When it happens you may need to re-generate certificate from the server side by following the instruction [certificate for rabbitmq](beehive-rabbitmq/README.md#create-ssl-server-certificate-for-rabbitmq). At the same time, the node should also get rid of the existing certificates and restart waggle-communications service,
+
+```bash
+# in the node terminal
+cd /usr/lib/waggle
+rm -rf SSL
+waggle-service stop waggle-communications
+waggle-service start waggle-communications
+```
