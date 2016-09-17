@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import os.path, logging, re, sys, json, time
-from export import export_generator, list_node_dates
+from export import export_generator, export_generator_raw, list_node_dates
 sys.path.append("..")
 from waggle_protocol.utilities.mysql import *
 
