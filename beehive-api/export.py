@@ -106,7 +106,7 @@ def export_generator_raw(node_id, date, ttl, delimiter):
 
     #node_id, ingest_id, meta_id, timestamp, data_set, sensor, parameter, value, unit
     # TODO: for now these values are zero and will be determined...
-    ingest_id = meta_id = data_set = unit = 0
+    ingest_id = meta_id = data_set = unit = '0'
     
     data_count = 0
     count = 0
