@@ -38,7 +38,7 @@ port = 80
 api_url_internal = 'http://localhost'
 api_url = 'http://beehive1.mcs.anl.gov'
 
-# modify /etc/hosts/: 127.0.0.1	localhost beehive1.mcs.anl.gov
+# modify /etc/hosts/: 127.0.0.1 localhost beehive1.mcs.anl.gov
 
 
 
@@ -262,7 +262,39 @@ def api_export(node_id):
             
     return Response(stream_with_context(generate()), mimetype='text/csv')
     
+@app.route('/api/1/nodes/<node_id>/export.csv')
+def api_export_csv(node_id):        
+    logger.debug('GET api_export.csv')
+    
+    date = request.args.get('date')
+
+    logger.info("date: %s", str(date))
    
+    if not date:
+        raise InvalidUsage("date is empty", status_code=STATUS_Not_Found)
+    
+    
+    r = re.compile('\d{4}-\d{1,2}-\d{1,2}')
+    
+    if not r.match(date):
+        raise InvalidUsage("date format not correct", status_code=STATUS_Not_Found)
+        
+    
+    logger.info("accepted date: %s" %(date))
+
+    def generate():
+        yield "# node_id, ingest_id, meta_id, timestamp, data_set, sensor, parameter, value, unit\n"
+        num_lines = 0
+        for row in export_generator_raw(node_id, date, False, ','):
+            yield row+"\n"
+            num_lines += 1
+
+        if num_lines == 0:
+            raise InvalidUsage("num_lines == 0", status_code=STATUS_Server_Error)
+        else:
+            yield "# %d results\n" % (num_lines)
+            
+    return Response(stream_with_context(generate()), mimetype='text/csv')
 
 if __name__ == "__main__":
     

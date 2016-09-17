@@ -83,6 +83,47 @@ def export_generator(node_id, date, ttl, delimiter):
     cluster.shutdown()
     logger.info("Retrieved %d rows" % (count))
 
+def export_generator_raw(node_id, date, ttl, delimiter):
+    """
+    Python generator to export sensor data from Cassandra
+    """
+
+    node_id = node_id.lower()
+    # TODO check if node exists
+
+    statement = "SELECT node_id, date, plugin_id, plugin_version, plugin_instance, timestamp, sensor, sensor_meta, data "+ \
+                "FROM waggle.sensor_data "+ \
+                "WHERE node_id='%s' AND date='%s'" %(node_id, date)
+
+    
+    try:
+        cluster, rows = query(statement)
+    except:
+        raise
+    
+    if not delimiter:
+        delimiter = ';'
+
+    #node_id, ingest_id, meta_id, timestamp, data_set, sensor, parameter, value, unit
+    # TODO: for now these values are zero and will be determined...
+    ingest_id = meta_id = data_set = unit = 0
+    
+    data_count = 0
+    count = 0
+    for (node_id, date, plugin_id, plugin_version, plugin_instance, timestamp, sensor, sensor_meta, data) in rows:
+        count +=1
+        for entity in data:
+            pair = entity.split(":")
+            if len(pair) != 2:
+                continue
+            
+            parameter = pair[0]
+            value = pair[1]
+            data_count +=1
+            yield delimiter.join((node_id, ingest_id, meta_id, str(timestamp), data_set, sensor, parameter, value, unit))
+    
+    cluster.shutdown()
+    logger.info("Retrieved %d rows and generated %d rows" % (count, data_count))
 
 def list_node_dates():
     """
